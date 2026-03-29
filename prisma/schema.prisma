@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  category    String   // REFURBISHED, NEW, RENTAL
+  brand       String
+  model       String
+
+  // Specifications
+  lumens      Int?
+  resolution  String?
+  technology  String?  // LCD, DLP, Laser
+  throwRatio  String?
+
+  // Pricing
+  price       Float
+  rentalPrice Float?
+
+  // Media
+  images      String   // JSON array of image paths
+  thumbnail   String
+
+  // Status
+  condition   String   // NEW, LIKE_NEW, EXCELLENT, GOOD
+  stock       Int      @default(0)
+  featured    Boolean  @default(false)
+  active      Boolean  @default(true)
+
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  inquiries   Inquiry[]
+}
+
+model Inquiry {
+  id          String   @id @default(cuid())
+
+  // Customer info
+  name        String
+  email       String
+  phone       String
+  company     String?
+
+  // Inquiry details
+  type        String   // PURCHASE, RENTAL, QUOTE, GENERAL
+  productId   String?
+  product     Product?  @relation(fields: [productId], references: [id])
+  message     String
+
+  // Status
+  status      String @default("NEW")  // NEW, CONTACTED, IN_PROGRESS, CONVERTED, CLOSED
+  priority    String @default("MEDIUM")  // LOW, MEDIUM, HIGH
+
+  // Admin notes
+  adminNotes  String?
+
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ServiceRequest {
+  id          String   @id @default(cuid())
+  ticketNo    String   @unique
+
+  // Customer info
+  name        String
+  email       String
+  phone       String
+  company     String?
+  address     String
+
+  // Service details
+  serviceType String   // REPAIR, MAINTENANCE, INSTALLATION, CONSULTATION, SMART_SETUP
+  projectorBrand String
+  projectorModel String
+  issueDescription String
+  urgency     String @default("NORMAL")  // LOW, NORMAL, HIGH, URGENT
+
+  // Scheduling
+  preferredDate DateTime?
+  scheduledDate DateTime?
+  completedDate DateTime?
+
+  // Status
+  status      String @default("PENDING")  // PENDING, SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+
+  // Technical details
+  technicianNotes String?
+  estimatedCost   Float?
+  finalCost       Float?
+
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed with bcrypt
+  name      String
+  role      String @default("ADMIN")  // ADMIN, SUPER_ADMIN
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
